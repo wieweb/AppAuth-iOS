@@ -21,19 +21,61 @@
 NS_ASSUME_NONNULL_BEGIN
 
 static NSURLSession *__nullable gURLSession;
+static NSString *__nullable OIDURLSessionProviderTrustedHost = nil;
 
 @implementation OIDURLSessionProvider
 
-+ (NSURLSession *)session {
++ (id)sharedProvider {
+    static OIDURLSessionProvider *sharedOIDURLSessionProvider = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedOIDURLSessionProvider = [[self alloc] init];
+    });
+    return sharedOIDURLSessionProvider;
+}
+
+- (id)init {
+  if (self = [super init]) {
+  }
+  return self;
+}
+
++ (nullable NSString *)trustedHost {
+  return OIDURLSessionProviderTrustedHost;
+}
+
++ (void)setTrustedHost:(nullable NSString *)newTrustedHost {
+  if(OIDURLSessionProviderTrustedHost != newTrustedHost) {
+    OIDURLSessionProviderTrustedHost = newTrustedHost;
+  }
+}
+
+- (NSURLSession *)session {
     if (!gURLSession) {
-        gURLSession = [NSURLSession sharedSession];
+        NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
+        gURLSession = [NSURLSession sessionWithConfiguration: sessionConfiguration delegate: self delegateQueue: Nil];
     }
     return gURLSession;
 }
 
-+ (void)setSession:(NSURLSession *)session {
+- (void)setSession:(NSURLSession *)session {
     NSAssert(session, @"Parameter: |session| must be non-nil.");
     gURLSession = session;
 }
+
+- (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential *))completionHandler {
+  
+  if(![OIDURLSessionProvider trustedHost]) {
+    return;
+  }
+  
+    if([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust]) {
+        if([challenge.protectionSpace.host containsString:[OIDURLSessionProvider trustedHost]]) {
+            NSURLCredential *credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
+            completionHandler(NSURLSessionAuthChallengeUseCredential,credential);
+        }
+    }
+}
+
 @end
 NS_ASSUME_NONNULL_END

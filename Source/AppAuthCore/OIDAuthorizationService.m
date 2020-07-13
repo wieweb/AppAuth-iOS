@@ -328,7 +328,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)discoverServiceConfigurationForDiscoveryURL:(NSURL *)discoveryURL
     completion:(OIDDiscoveryCallback)completion {
 
-  NSURLSession *session = [OIDURLSessionProvider session];
+  NSURLSession *session = [[OIDURLSessionProvider sharedProvider] session];
   NSURLSessionDataTask *task =
       [session dataTaskWithURL:discoveryURL
              completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
@@ -438,7 +438,7 @@ NS_ASSUME_NONNULL_BEGIN
                       [[NSString alloc] initWithData:URLRequest.HTTPBody
                                             encoding:NSUTF8StringEncoding]);
 
-  NSURLSession *session = [OIDURLSessionProvider session];
+  NSURLSession *session = [[OIDURLSessionProvider sharedProvider] session];
   [[session dataTaskWithRequest:URLRequest
               completionHandler:^(NSData *_Nullable data,
                                   NSURLResponse *_Nullable response,
@@ -683,7 +683,7 @@ NS_ASSUME_NONNULL_BEGIN
     return;
   }
 
-  NSURLSession *session = [OIDURLSessionProvider session];
+  NSURLSession *session = [[OIDURLSessionProvider sharedProvider] session];
   [[session dataTaskWithRequest:URLRequest
               completionHandler:^(NSData *_Nullable data,
                                   NSURLResponse *_Nullable response,
